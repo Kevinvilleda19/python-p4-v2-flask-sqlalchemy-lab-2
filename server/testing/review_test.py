@@ -18,13 +18,28 @@ class TestReview:
 
     def test_can_be_saved_to_database(self):
         '''can be added to a transaction and committed to review table with comment column.'''
-        with app.app_context():
-            assert 'comment' in Review.__table__.columns
-            r = Review(comment='great!')
-            db.session.add(r)
-            db.session.commit()
-            assert hasattr(r, 'id')
-            assert db.session.query(Review).filter_by(id=r.id).first()
+    with app.app_context():
+        assert 'comment' in Review.__table__.columns
+
+        # Create and save a Customer and Item
+        c = Customer(name='John Doe')
+        i = Item(name='Sample Item', price=19.99)
+        db.session.add_all([c, i])
+        db.session.commit()
+
+        # Now create a Review and associate it with the Customer and Item
+        r = Review(comment='great!', customer=c, item=i)
+        db.session.add(r)
+        db.session.commit()
+
+        # Ensure the Review is saved correctly and has an ID assigned
+        assert hasattr(r, 'id')
+
+        # Ensure the Review can be queried from the database by ID
+        saved_review = db.session.query(Review).filter_by(id=r.id).first()
+        assert saved_review is not None
+        assert saved_review.comment == 'great!'
+
 
     def test_is_related_to_customer_and_item(self):
         '''has foreign keys and relationships'''
